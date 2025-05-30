@@ -1,0 +1,48 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3-minio-curated-proxy
+  labels:
+    app: s3-minio-curated-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: s3-minio-curated-proxy
+  template:
+    metadata:
+      labels:
+        app: s3-minio-curated-proxy
+    spec:
+      containers:
+        - name: s3-proxy
+          image: yourregistry/s3-proxy:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: s3-credentials
+              mountPath: /etc/secrets
+              readOnly: true
+          env:
+            - name: AWS_ACCESS_KEY_FILE
+              value: "/etc/secrets/access_key"
+            - name: AWS_SECRET_KEY_FILE
+              value: "/etc/secrets/secret_key"
+      volumes:
+        - name: s3-credentials
+          secret:
+            secretName: s3aas-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3-minio-curated-proxy
+spec:
+  selector:
+    app: s3-minio-curated-proxy
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
