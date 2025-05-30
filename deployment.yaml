@@ -30,6 +30,12 @@ spec:
               value: "/etc/secrets/access_key"
             - name: AWS_SECRET_KEY_FILE
               value: "/etc/secrets/secret_key"
+            - name: MINIO_BUCKET_NAME
+              value: proxy-bucket
+            - name: MINIO_ENDPOINT
+              value: minio.svc.ns.cloud.local:9000
+            - name: PORT
+              value: '80'
       volumes:
         - name: s3-credentials
           secret:
