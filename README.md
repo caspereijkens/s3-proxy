@@ -22,12 +22,7 @@ docker run -p 8080:80 -e MINIO_ACCESS_KEY_ID=minioadmin -e MINIO_SECRET_ACCESS_K
 Notice that in this setup, we are only exposing port 8080 and port 9001. Port 9000, the destination port, is not exposed. The s3-proxy will connect internally via the docker network.
 
 ### Test
-This primitive upload command
+Run the script
 ```sh
-curl -X PUT \
-  -T /home/user/Pictures/example.png \
-  "http://localhost:9000/my-bucket/example.png" \
-  -H "Host: localhost" \
-  -H "Content-Type: image/png" \
-  -H "Authorization: minioadmin:minioadmin"
+./scripts/upload-file.sh <bucket name> <file> <port>
 ```
