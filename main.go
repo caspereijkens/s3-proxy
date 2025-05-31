@@ -16,7 +16,6 @@ var (
 	minioAccessKeyID     string
 	minioSecretAccessKey string
 	minioEndpoint        string
-	minioBucketName      string
 	useSSL               = false
 	minioClient          *minio.Client
 	err                  error
@@ -37,7 +36,7 @@ func loadEnvVar(key string) string {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("📥 Upload received: %s %s", r.Method, r.URL.Path)
+	log.Printf("Upload received: %s %s", r.Method, r.URL.Path)
 
 	if r.Method != http.MethodPut && r.Method != http.MethodPost {
 		http.Error(w, "Only PUT/POST allowed", http.StatusMethodNotAllowed)
@@ -56,10 +55,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		Secure: useSSL,
 	})
 	if err != nil {
-		log.Fatalf("❌ Failed to initialize MinIO client: %v", err)
+		log.Printf("Failed to initialize MinIO client: %v", err)
 	}
 
-	// Upload to MinIO
 	info, err := minioClient.PutObject(
 		context.Background(),
 		bucketName,
@@ -69,12 +67,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		minio.PutObjectOptions{ContentType: "application/octet-stream"},
 	)
 	if err != nil {
-		log.Printf("❌ Upload failed: %v", err)
+		log.Printf("Upload failed: %v", err)
 		http.Error(w, "Upload failed", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("✅ Uploaded object %s (%d bytes)", info.Key, info.Size)
+	log.Printf("Uploaded object %s (%d bytes)", info.Key, info.Size)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -84,7 +82,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
   mux := http.NewServeMux()
   mux.HandleFunc("/", uploadHandler)
-
-	log.Println("🚀 Server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":80", mux))
+	log.Println("Server running on :80")
 }
