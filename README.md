@@ -2,7 +2,8 @@
 This is a proxy for s3 uploads. The point is to be able to migrate s3 object stores without the uploading party having to migrate directly. 
 
 ## Docker demo 
-```
+### Setup
+```sh
 # Create a docker network
 docker network create my-bridge-network
 
@@ -18,3 +19,15 @@ mc mb proxy-bucket
 docker run -p 8080:80 -e MINIO_ACCESS_KEY_ID=minioadmin -e MINIO_SECRET_ACCESS_KEY=minioadmin -e MINIO_ENDPOINT=minio:9000 -e MINIO_BUCKET_NAME=proxy-bucket --network my-bridge-network s3-proxy:v0.0.1
 ```
 
+Notice that in this setup, we are only exposing port 8080 and port 9001. Port 9000, the destination port, is not exposed. The s3-proxy will connect internally via the docker network.
+
+### Test
+This primitive upload command
+```sh
+curl -X PUT \
+  -T /home/user/Pictures/example.png \
+  "http://localhost:9000/my-bucket/example.png" \
+  -H "Host: localhost" \
+  -H "Content-Type: image/png" \
+  -H "Authorization: minioadmin:minioadmin"
+```

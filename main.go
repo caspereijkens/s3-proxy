@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+	"strings"
 
 	minio "github.com/minio/minio-go/v7"
 	credentials "github.com/minio/minio-go/v7/pkg/credentials"
@@ -26,7 +26,6 @@ func init() {
 	minioAccessKeyID = loadEnvVar("MINIO_ACCESS_KEY_ID")
 	minioSecretAccessKey = loadEnvVar("MINIO_SECRET_ACCESS_KEY")
 	minioEndpoint = loadEnvVar("MINIO_ENDPOINT")
-	minioBucketName = loadEnvVar("MINIO_BUCKET_NAME")
 }
 
 func loadEnvVar(key string) string {
@@ -45,6 +44,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
+	if len(parts) < 2 {
+		http.Error(w, "Invalid path: must be /<bucket>/<filename>", http.StatusBadRequest)
+		return
+	}
+	bucketName := parts[0]
+	objectName := strings.Join(parts[1:], "/") 
 	minioClient, err = minio.New(minioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(minioAccessKeyID, minioSecretAccessKey, ""),
 		Secure: useSSL,
@@ -52,13 +58,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("❌ Failed to initialize MinIO client: %v", err)
 	}
-	// Set object name based on time (or customize)
-	objectName := fmt.Sprintf("upload-%d", time.Now().UnixNano())
 
 	// Upload to MinIO
 	info, err := minioClient.PutObject(
 		context.Background(),
-		minioBucketName,
+		bucketName,
 		objectName,
 		r.Body,
 		r.ContentLength,
@@ -78,8 +82,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/upload", uploadHandler)
+  mux := http.NewServeMux()
+  mux.HandleFunc("/", uploadHandler)
 
-	log.Println("🚀 Server running on :80")
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Println("🚀 Server running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
