@@ -2,25 +2,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: s3-minio-curated-proxy
+  name: s3-minio-curated-reverse-proxy
   labels:
-    app: s3-minio-curated-proxy
+    app: s3-minio-curated-reverse-proxy
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: s3-minio-curated-proxy
+      app: s3-minio-curated-reverse-proxy
   template:
     metadata:
       labels:
-        app: s3-minio-curated-proxy
+        app: s3-minio-curated-reverse-proxy
     spec:
       containers:
-        - name: s3-proxy
-          image: yourregistry/s3-proxy:latest
+        - name: s3-reverse-proxy
+          image: yourregistry/s3-reverse-proxy:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           volumeMounts:
             - name: s3-credentials
               mountPath: /etc/secrets
@@ -30,10 +30,8 @@ spec:
               value: "/etc/secrets/access_key"
             - name: AWS_SECRET_KEY_FILE
               value: "/etc/secrets/secret_key"
-            - name: MINIO_BUCKET_NAME
-              value: proxy-bucket
             - name: MINIO_ENDPOINT
-              value: minio.svc.ns.cloud.local:9000
+              value: minio.ns.svc.cluster.local:9000
             - name: PORT
               value: '80'
       volumes:
@@ -44,11 +42,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: s3-minio-curated-proxy
+  name: s3-minio-curated-reverse-proxy
 spec:
   selector:
-    app: s3-minio-curated-proxy
+    app: s3-minio-curated-reverse-proxy
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: 80

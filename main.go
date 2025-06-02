@@ -12,6 +12,10 @@ import (
 	credentials "github.com/minio/minio-go/v7/pkg/credentials"
 )
 
+const (
+	port = ":80"
+)
+
 var (
 	minioAccessKeyID     string
 	minioSecretAccessKey string
@@ -82,6 +86,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
   mux := http.NewServeMux()
   mux.HandleFunc("/", uploadHandler)
-	log.Fatal(http.ListenAndServe(":80", mux))
-	log.Println("Server running on :80")
+	log.Println("Server running on ", port)
+	log.Fatal(http.ListenAndServe(port, mux))
 }
